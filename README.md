@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # JobNova - Full-Stack AI Job Board with Real-Time Digital Human
 
 A production-ready full-stack application featuring an AI-powered job board with personalized recommendations and real-time digital human interactions using Tavus Persona API and LiveKit.
@@ -302,3 +303,6 @@ This project is a demonstration application.
 
 Built with ❤️ using Next.js, FastAPI, Tavus, and LiveKit
 
+=======
+# JobNova
+>>>>>>> ce8386bfee3108ccb649c6b48fae348263721398
