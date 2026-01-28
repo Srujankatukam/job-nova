@@ -205,7 +205,7 @@ MOCK_JOBS = [
         "type": "full-time",
         "workType": "remote",
         "salary": {"min": 120000, "max": 160000, "currency": "USD"},
-        "description": "Build scalable real-time systems using FastAPI, WebSockets, and modern async patterns. Experience with LiveKit or similar platforms preferred.",
+        "description": "Build scalable real-time systems using FastAPI, WebSockets, and modern async patterns.",
         "requirements": ["4+ years experience", "Python", "FastAPI", "WebSockets", "Async programming"],
         "tags": ["Backend", "Real-Time", "Python", "FastAPI", "Remote"],
         "postedDate": (datetime.now() - timedelta(days=1)).isoformat(),

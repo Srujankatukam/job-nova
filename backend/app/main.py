@@ -5,7 +5,8 @@ from fastapi.responses import JSONResponse
 import logging
 
 from app.config import settings
-from app.routers import jobs, avatar
+from app.routers import jobs
+from app.routers import avatar_router
 
 # Configure logging
 logging.basicConfig(
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Full-Stack AI Job Board with Real-Time Digital Human",
+    description="AI-Powered Job Board",
 )
 
 # Configure CORS
@@ -32,7 +33,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(jobs.router, prefix=settings.API_V1_PREFIX, tags=["jobs"])
-app.include_router(avatar.router, prefix=settings.API_V1_PREFIX, tags=["avatar"])
+app.include_router(avatar_router.router, prefix=settings.API_V1_PREFIX, tags=["avatar"])
 
 
 @app.get("/")

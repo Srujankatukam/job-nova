@@ -1,8 +1,9 @@
-"""Tavus Persona API service"""
+"""Tavus Persona API service for real-time digital human interactions"""
 import httpx
-import logging
+import asyncio
 from typing import Optional, Dict, Any
-import uuid
+from datetime import datetime, timedelta
+import logging
 
 from app.config import settings
 
@@ -14,122 +15,211 @@ class TavusService:
     
     def __init__(self):
         self.api_key = settings.TAVUS_API_KEY
-        self.api_url = settings.TAVUS_API_URL
         self.persona_id = settings.TAVUS_PERSONA_ID
+        self.base_url = settings.TAVUS_API_URL
         self.client = httpx.AsyncClient(
-            base_url=self.api_url,
+            base_url=self.base_url,
             headers={
                 "x-api-key": self.api_key or "",
                 "Content-Type": "application/json",
             },
             timeout=30.0,
         )
+        self._conversations: Dict[str, Dict[str, Any]] = {}
     
-    async def generate_avatar(
+    async def create_conversation(
         self,
-        text: str,
-        persona_id: Optional[str] = None
+        conversation_name: Optional[str] = None,
+        custom_greeting: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Generate avatar video from text using Tavus Persona API
+        Create a new Tavus conversation with the configured persona
         
         Args:
-            text: Text to convert to speech
-            persona_id: Optional persona ID (uses default if not provided)
-        
+            conversation_name: Optional name for the conversation
+            custom_greeting: Optional custom greeting message
+            
         Returns:
-            Dictionary with session_id and status
+            Dictionary containing conversation details including conversation_id
         """
-        if not self.api_key:
-            logger.warning("Tavus API key not configured, using mock response")
-            return self._mock_generate(text)
+        if not self.api_key or not self.persona_id:
+            raise ValueError("Tavus API key and persona ID must be configured")
         
         try:
-            persona = persona_id or self.persona_id
-            if not persona:
-                raise ValueError("Persona ID is required")
-            
-            # Generate a unique session ID
-            session_id = str(uuid.uuid4())
-            
-            # Call Tavus API to create a replica video
-            # Note: This is a simplified example - actual Tavus API may differ
             payload = {
-                "persona_id": persona,
-                "script": text,
-                "callback_url": None,  # Could set up webhook URL here
+                "persona_id": self.persona_id,
+                "conversation_name": conversation_name or f"conversation_{datetime.now().isoformat()}",
             }
             
-            response = await self.client.post(
-                "/v2/replicas",
-                json=payload
-            )
+            # Add conversational context if provided
+            if custom_greeting:
+                payload["conversational_context"] = custom_greeting
+            
+            logger.info(f"Creating Tavus conversation with persona {self.persona_id}")
+            response = await self.client.post("/v2/conversations", json=payload)
             response.raise_for_status()
             
-            result = response.json()
+            data = response.json()
+            conversation_id = data.get("conversation_id")
             
-            return {
-                "session_id": session_id,
-                "tavus_replica_id": result.get("replica_id"),
-                "status": "generating",
-                "video_url": None,
+            # Store conversation metadata
+            self._conversations[conversation_id] = {
+                "id": conversation_id,
+                "created_at": datetime.now().isoformat(),
+                "status": "active",
+                "metadata": data,
             }
             
-        except httpx.HTTPError as e:
-            logger.error(f"Tavus API error: {e}")
-            # Fallback to mock for development
-            return self._mock_generate(text)
+            logger.info(f"Created Tavus conversation: {conversation_id}")
+            return data
+            
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Tavus API error: {e.response.status_code} - {e.response.text}")
+            raise Exception(f"Failed to create Tavus conversation: {e.response.text}")
         except Exception as e:
-            logger.error(f"Error generating avatar: {e}")
+            logger.error(f"Error creating Tavus conversation: {str(e)}")
             raise
     
-    async def get_replica_status(self, replica_id: str) -> Dict[str, Any]:
+    async def get_conversation_token(self, conversation_id: str) -> Dict[str, Any]:
         """
-        Get status of a Tavus replica generation
+        Get connection details and token for a conversation
         
         Args:
-            replica_id: Tavus replica ID
-        
+            conversation_id: The Tavus conversation ID
+            
         Returns:
-            Dictionary with status and video URL if ready
+            Dictionary containing connection URL and token
         """
-        if not self.api_key:
-            return {
-                "status": "ready",
-                "video_url": "https://example.com/mock-video.mp4",
-            }
-        
         try:
-            response = await self.client.get(f"/v2/replicas/{replica_id}")
+            logger.info(f"Getting token for conversation: {conversation_id}")
+            response = await self.client.get(f"/v2/conversations/{conversation_id}")
             response.raise_for_status()
             
-            result = response.json()
+            return response.json()
             
-            return {
-                "status": result.get("status", "unknown"),
-                "video_url": result.get("video_url"),
-                "audio_url": result.get("audio_url"),
-            }
-        except httpx.HTTPError as e:
-            logger.error(f"Error fetching replica status: {e}")
-            return {"status": "error", "error": str(e)}
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Tavus API error: {e.response.status_code} - {e.response.text}")
+            raise Exception(f"Failed to get conversation token: {e.response.text}")
+        except Exception as e:
+            logger.error(f"Error getting conversation token: {str(e)}")
+            raise
     
-    def _mock_generate(self, text: str) -> Dict[str, Any]:
-        """Mock generation for development/testing"""
-        session_id = str(uuid.uuid4())
-        logger.info(f"Mock avatar generation for text: {text[:50]}...")
-        return {
-            "session_id": session_id,
-            "tavus_replica_id": f"mock_{session_id}",
-            "status": "generating",
-            "video_url": None,
-        }
+    async def send_message(
+        self,
+        conversation_id: str,
+        text: str,
+    ) -> bool:
+        """
+        Send a text message to the avatar for TTS and lip-sync
+        
+        Note: In Tavus Persona API, messages are typically sent via WebRTC data channel
+        after establishing the connection. This method is a placeholder for future
+        implementation if Tavus adds a REST endpoint for message sending.
+        
+        Args:
+            conversation_id: The Tavus conversation ID
+            text: The message text to send
+            
+        Returns:
+            True if successful
+        """
+        # For now, log the message
+        # Actual message sending happens via LiveKit data channel
+        logger.info(f"Message queued for conversation {conversation_id}: {text[:50]}...")
+        
+        if conversation_id in self._conversations:
+            if "messages" not in self._conversations[conversation_id]:
+                self._conversations[conversation_id]["messages"] = []
+            self._conversations[conversation_id]["messages"].append({
+                "text": text,
+                "timestamp": datetime.now().isoformat(),
+                "role": "user",
+            })
+        
+        return True
+    
+    async def end_conversation(self, conversation_id: str) -> bool:
+        """
+        End a Tavus conversation and cleanup resources
+        
+        Args:
+            conversation_id: The Tavus conversation ID
+            
+        Returns:
+            True if successful
+        """
+        try:
+            logger.info(f"Ending conversation: {conversation_id}")
+            
+            # Update local metadata
+            if conversation_id in self._conversations:
+                self._conversations[conversation_id]["status"] = "ended"
+                self._conversations[conversation_id]["ended_at"] = datetime.now().isoformat()
+            
+            # Tavus conversations typically end when the WebRTC connection closes
+            # No explicit API call needed, but we can optionally call DELETE if needed
+            try:
+                response = await self.client.delete(f"/v2/conversations/{conversation_id}")
+                response.raise_for_status()
+            except httpx.HTTPStatusError as e:
+                # It's okay if this fails - conversation might already be ended
+                logger.warning(f"Could not delete conversation {conversation_id}: {e.response.text}")
+            
+            logger.info(f"Conversation ended: {conversation_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error ending conversation: {str(e)}")
+            return False
+    
+    async def get_conversation_status(self, conversation_id: str) -> Dict[str, Any]:
+        """
+        Get the status of a conversation
+        
+        Args:
+            conversation_id: The Tavus conversation ID
+            
+        Returns:
+            Dictionary containing conversation status and metadata
+        """
+        try:
+            # First check local cache
+            if conversation_id in self._conversations:
+                local_data = self._conversations[conversation_id]
+            else:
+                local_data = {"id": conversation_id, "status": "unknown"}
+            
+            # Get latest from API
+            try:
+                response = await self.client.get(f"/v2/conversations/{conversation_id}")
+                response.raise_for_status()
+                api_data = response.json()
+                
+                # Merge with local data
+                return {
+                    **local_data,
+                    **api_data,
+                }
+            except httpx.HTTPStatusError:
+                # Conversation might not exist anymore
+                return local_data
+            
+        except Exception as e:
+            logger.error(f"Error getting conversation status: {str(e)}")
+            raise
     
     async def close(self):
-        """Close HTTP client"""
+        """Close the HTTP client"""
         await self.client.aclose()
 
 
-# Global instance
-tavus_service = TavusService()
+# Singleton instance
+_tavus_service: Optional[TavusService] = None
 
+
+def get_tavus_service() -> TavusService:
+    """Get or create the Tavus service singleton"""
+    global _tavus_service
+    if _tavus_service is None:
+        _tavus_service = TavusService()
+    return _tavus_service

@@ -17,18 +17,16 @@ class Settings(BaseSettings):
         "http://localhost:3001",
     ]
     
-    # Tavus API Configuration
+    # Tavus Configuration
     TAVUS_API_KEY: Optional[str] = None
-    TAVUS_API_URL: str = "https://api.tavus.io"
     TAVUS_PERSONA_ID: Optional[str] = None
+    TAVUS_API_URL: str = "https://tavusapi.com"
     
     # LiveKit Configuration
     LIVEKIT_URL: Optional[str] = None
     LIVEKIT_API_KEY: Optional[str] = None
     LIVEKIT_API_SECRET: Optional[str] = None
     
-    # WebSocket Configuration
-    WS_HEARTBEAT_INTERVAL: int = 30
     
     class Config:
         env_file = ".env"
