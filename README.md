@@ -1,5 +1,5 @@
 # JobNova - AI-Powered Job Board & Interview Coach
- 
+  
 # ![JobNova AI Interview Assistant](frontend/public/images/RR.png)
 
 ## 🚀 Overview
