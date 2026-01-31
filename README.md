@@ -3,7 +3,7 @@
 # ![JobNova AI Interview Assistant](frontend/public/images/RR.png)
    
 ## 🚀 Overview
-  
+   
 **JobNova** is a next-generation job application platform that goes beyond simple listings. It combines a robust job search engine with an immersive **AI Mock Interview Coach**, creating a comprehensive career development ecosystem.
  
 The centerpiece of JobNova is its **Real-Time Digital Human** integration. Using cutting-edge AI (Tavus Persona API) and low-latency streaming (LiveKit), candidates can practice interviews with a lifelike AI avatar that responds to both spoken and typed inputs in real-time, providing a safe and realistic environment to refine their skills.
