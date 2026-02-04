@@ -9,7 +9,7 @@
 The centerpiece of JobNova is its **Real-Time Digital Human** integration. Using cutting-edge AI (Tavus Persona API) and low-latency streaming (LiveKit), candidates can practice interviews with a lifelike AI avatar that responds to both spoken and typed inputs in real-time, providing a safe and realistic environment to refine their skills.
  
 ## ✨ Key Features   
-
+ 
 ### 🤖 AI Mock Interview Coach (The "Wow" Factor)
 *   **Lifelike Avatar**: Interact with a hyper-realistic digital human that mimics human expressions and lip-syncing.
 *   **Real-Time Conversation**: Talk to the avatar naturally with near-zero latency (<500ms).
