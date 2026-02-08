@@ -2,7 +2,7 @@
            
 # ![JobNova AI Interview Assistant](frontend/public/images/RR.png) 
     
-## 🚀 Overview 
+## 🚀 Overview  
        
 **JobNova** is a next-generation job application platform that goes beyond simple listings. It combines a robust job search engine with an immersive **AI Mock Interview Coach**, creating a comprehensive career development ecosystem. 
   
